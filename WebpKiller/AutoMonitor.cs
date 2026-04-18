@@ -39,10 +39,10 @@ internal static class AutoMonitor
     public static Thread AutoScan(FolderSettingsV1[] settings, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(settings);
-        using var sem = new SemaphoreSlim(Math.Max(1, Environment.ProcessorCount - 1));
 
         var t = new Thread(() =>
         {
+            using var sem = new SemaphoreSlim(Math.Max(1, Environment.ProcessorCount - 1));
             async Task AsyncConvert(string file, FolderSettingsV1 setting)
             {
                 try

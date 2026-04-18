@@ -2,16 +2,22 @@
 
 Application that monitors given folders and automatically converts all webp files into jpeg format
 
+![Settings form](docs/form.png)
+
 ## Building
 
-Needs .NET 10. Should build as-is. Open a terminal in the directory that contains the csproj file,
-then execute `dotnet build -c release`
+This application needs .NET 10 SDK. Should build as-is. Open a terminal in the directory that contains the csproj file,
+then execute `dotnet build -c Release`
 
 The exe will be in the `bin\Release` folder
 
 ## Dependencies
 
-This application needs Image Magick: https://imagemagick.org/download/
+This application needs the .NET 10 **Desktop** Runtime:
+https://dotnet.microsoft.com/en-us/download/dotnet/10.0
+
+This application needs Image Magick:
+https://imagemagick.org/download/
 
 The application checks if it can find the `magick` command anywhere in the configured lookup paths of your operating system.
 If it can't, it shows an error message about it and will exit.

@@ -1,7 +1,6 @@
 # WebpKiller
 
-Application that monitors given folders and silently converts all webp files into jpeg,
-then deletes the webp files.
+Application that monitors given folders and automatically converts all webp files into jpeg format
 
 ## Building
 
@@ -10,19 +9,64 @@ then execute `dotnet build -c release`
 
 The exe will be in the `bin\Release` folder
 
+## Dependencies
+
+This application needs imagemagick: https://imagemagick.org/download/
+
+The application checks if it can find the magic command anywhere.
+If it can't, it shows an error message about it and will exit.
+
 ## Usage
 
-Before using, install imagemagick: https://imagemagick.org/download/#windows
+This utility is of the "double click and go" type.
+Simply double click the executable to run it.
+If you don't have any folders configured yet, the settings window is automatically shown,
+otherwise it starts in the background without showing anything.
 
-Simply run the command and supply as many folders to watch as you want.
-The application also watches all subfolders.
+Use the tray icon to bring up the settings dialog or exit the application.
 
-    WebpKiller.exe <path> [path ...]
+### Folder option: Enabled
 
-*Tip: Add to your startup folder to launch it when you start your computer*
+This checkbox enables or disables a setting.
+Allowing you to disable them without having to remove them.
 
-It will retry the conversion for up to 10 seconds
-to accomodate utilities that keep the webp file handle open for a while
+### Folder option: Full scan at startup
 
-Note: The application has no UI and no official way to exit because I did not intend to publish it.
-You can kill it via Task Manager if you want to exit it.
+If enabled, the supplied folder is scanned for existing webp files during startup,
+which are then converted.
+
+This scan is only performed during application start,
+never by adding a folder or by changing this value.
+
+The automatic scan will run in the background,
+and is limited by the number of CPU codes (minus one) of your system.
+Files converted this way will not trigger the conversion notification.
+This setting respects the "Enabled", "Include subdirectories", and "Delete webp after conversion" settings.
+
+### Folder option: Include subdirectories
+
+If enabled, the application will also check for webp files in all subdirectories of the specified folder.
+
+### Folder option: Delete webp after conversion
+
+If enabled, the webp file is deleted after conversion.
+Even if enabled, the file is only deleted if ImageMagick exited with a success code.
+
+### Folder option: Show conversion messages
+
+This shows a popup in your notification area for every file that was converted,
+or failed to convert.
+
+There is a global cooldown, and you will see at most one message every 5 seconds.
+
+## Autostart
+
+The application doesn't comes with this built-in but you can do it yourself fairly easily:
+
+1. Open the "run" dialog (Using `[WIN]`+`[R]` key combination or by right clicking on the start button)
+2. Type `shell:startup` into the box and hit ENTER
+3. Drag the WebpKiller.exe into the window using the **right** mouse button
+4. Select "Create shortcut here" from the context menu
+5. Close the explorer Window agaion
+
+To disable autostart, simply delete the shortcut.

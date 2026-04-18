@@ -11,9 +11,9 @@ The exe will be in the `bin\Release` folder
 
 ## Dependencies
 
-This application needs imagemagick: https://imagemagick.org/download/
+This application needs Image Magick: https://imagemagick.org/download/
 
-The application checks if it can find the magic command anywhere.
+The application checks if it can find the `magick` command anywhere in the configured lookup paths of your operating system.
 If it can't, it shows an error message about it and will exit.
 
 ## Usage
@@ -24,6 +24,21 @@ If you don't have any folders configured yet, the settings window is automatical
 otherwise it starts in the background without showing anything.
 
 Use the tray icon to bring up the settings dialog or exit the application.
+
+## Settings
+
+The settings window allows you to configure monitored directories.
+Each directory has its individual set of monitoring options.
+
+**Do not monitor too broadly**,
+for example, do not just add the `C:` drive into the list.
+Not only is this going to affect monitoring performance,
+the startup scan (if enabled) is going to take a long time,
+and the application may also convert webp files that have been temporarily written to disk
+or are used by other programs.
+
+You should monitor as restrictive as possible,
+for example your download and images directories.
 
 ### Folder option: Enabled
 
@@ -50,7 +65,7 @@ If enabled, the application will also check for webp files in all subdirectories
 ### Folder option: Delete webp after conversion
 
 If enabled, the webp file is deleted after conversion.
-Even if enabled, the file is only deleted if ImageMagick exited with a success code.
+Even if enabled, the file is only deleted if Image Magick exited with a success code.
 
 ### Folder option: Show conversion messages
 

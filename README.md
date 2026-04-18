@@ -22,6 +22,8 @@ This utility is of the "double click and go" type.
 Simply double click the executable to run it.
 If you don't have any folders configured yet, the settings window is automatically shown,
 otherwise it starts in the background without showing anything.
+You can only run one instance at a time per user.
+If a copy is already running, its settings window will be shown.
 
 Use the tray icon to bring up the settings dialog or exit the application.
 

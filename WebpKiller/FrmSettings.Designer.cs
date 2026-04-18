@@ -66,11 +66,11 @@ partial class FrmSettings
         // 
         CbRecursive.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         CbRecursive.AutoSize = true;
-        CbRecursive.Location = new Point(293, 62);
+        CbRecursive.Location = new Point(294, 62);
         CbRecursive.Name = "CbRecursive";
-        CbRecursive.Size = new Size(143, 19);
+        CbRecursive.Size = new Size(142, 19);
         CbRecursive.TabIndex = 5;
-        CbRecursive.Text = "&Include Subdirectories";
+        CbRecursive.Text = "&Include subdirectories";
         CbRecursive.UseVisualStyleBackColor = true;
         // 
         // CbScanOnStartup

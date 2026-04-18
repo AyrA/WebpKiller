@@ -1,13 +1,31 @@
 ﻿namespace WebpKiller;
 
+/// <summary>
+/// Watches a directory for newly created webp files
+/// </summary>
 internal class Watcher : IDisposable
 {
+    /// <summary>
+    /// Event that is raised every time a webp is created
+    /// </summary>
+    /// <remarks>
+    /// Depending on how the creating application creates the webp,
+    /// this event may be raised multiple times for the same file,
+    /// and you may need a duplication detection at the event handler
+    /// </remarks>
     public event FileCreatedHandler FileCreated = delegate { };
 
     private readonly Dictionary<int, FileSystemWatcher> watchers = [];
     private int index = 0;
     private bool disposed;
 
+    /// <summary>
+    /// Monitors the given path for webp files
+    /// </summary>
+    /// <param name="path">Path to monitor</param>
+    /// <param name="recursive">Include subdirectories</param>
+    /// <returns>Monitoring id, used in other calls like <see cref="StopMonitor(int)"/></returns>
+    /// <exception cref="DirectoryNotFoundException"><paramref name="path"/> is invalid</exception>
     public int MonitorPath(string path, bool recursive)
     {
         ArgumentException.ThrowIfNullOrEmpty(path);
@@ -32,15 +50,20 @@ internal class Watcher : IDisposable
         return index;
     }
 
-    public bool StopMonitor(int index)
+    /// <summary>
+    /// Stops a given monitor
+    /// </summary>
+    /// <param name="monitorId">Monitor id</param>
+    /// <returns>true if found and stopped, false if not found</returns>
+    public bool StopMonitor(int monitorId)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
         FileSystemWatcher? watcher;
         lock (watchers)
         {
-            if (watchers.TryGetValue(index, out watcher))
+            if (watchers.TryGetValue(monitorId, out watcher))
             {
-                watchers.Remove(index);
+                watchers.Remove(monitorId);
             }
         }
         if (watcher != null)
@@ -53,6 +76,9 @@ internal class Watcher : IDisposable
         return false;
     }
 
+    /// <summary>
+    /// Stops all monitors
+    /// </summary>
     public void StopAll()
     {
         ObjectDisposedException.ThrowIf(disposed, this);
@@ -64,6 +90,10 @@ internal class Watcher : IDisposable
         watchers.Clear();
     }
 
+    /// <summary>
+    /// Gets all currently active monitor configurations
+    /// </summary>
+    /// <returns></returns>
     public MonitorInfo[] GetMonitor()
     {
         ObjectDisposedException.ThrowIf(disposed, this);

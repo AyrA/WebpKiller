@@ -5,14 +5,24 @@ namespace WebpKiller;
 
 internal delegate void PipeMessageEventHandler(string message);
 
-
+/// <summary>
+/// Checks if a duplicate process is already running.
+/// This class corretly deals with multi-user environments
+/// </summary>
 internal static class DuplicateCheck
 {
+    /// <summary>
+    /// Event that is triggered when a secondary copy was launched
+    /// </summary>
     public static event PipeMessageEventHandler PipeMessage = delegate { };
 
     private static NamedPipeServerStream? server;
     private static readonly string pipeName = $"{Environment.UserName}-webp-killer";
 
+    /// <summary>
+    /// Initializes the duplication check and checks if this is the first, or a subsequent copy
+    /// </summary>
+    /// <returns>true if first copy, false if another process is already running</returns>
     public static bool Init()
     {
         try
@@ -51,6 +61,7 @@ internal static class DuplicateCheck
         }
         try
         {
+            //Do not wait indefinitely
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             s.EndWaitForConnection(ar);
             await s.ReadExactlyAsync(buffer, cts.Token);
@@ -62,7 +73,7 @@ internal static class DuplicateCheck
         }
         catch
         {
-
+            //NOOP
         }
         finally
         {

@@ -2,6 +2,9 @@
 using WebpKiller;
 using WebpKiller.Settings;
 
+/// <summary>
+/// Main entry point
+/// </summary>
 internal class Program
 {
     private static NotifyIcon? icon = null;
@@ -9,6 +12,12 @@ internal class Program
     private static bool showForm = false;
     private static bool hasInit = false;
 
+    /// <summary>
+    /// Shows a conversion success or failure message
+    /// </summary>
+    /// <param name="path">Full path of webp file</param>
+    /// <param name="result">Conversion result</param>
+    /// <remarks>This is only safe to call on the main thread</remarks>
     public static void ReportConversionResult(string path, bool result)
     {
         if (icon != null && cooldown.ElapsedMilliseconds > 5000)

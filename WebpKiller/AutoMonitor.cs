@@ -3,6 +3,9 @@ using WebpKiller.Settings;
 
 namespace WebpKiller;
 
+/// <summary>
+/// Monitors folders for webp files and automatically takes actions based on the folder configuration
+/// </summary>
 internal static class AutoMonitor
 {
     private static readonly List<string> processing = [];
@@ -16,18 +19,23 @@ internal static class AutoMonitor
         watcher.FileCreated += Watcher_FileCreated;
     }
 
+    /// <summary>
+    /// Does a full directory scan for all settings that are configured to scan at startup.
+    /// </summary>
+    /// <param name="cancellationToken">Token to gracefully cancel the startup scan</param>
+    /// <returns>Thread of the startup scan</returns>
     public static Thread AutoScan(CancellationToken cancellationToken = default)
         => AutoScan(SettingsProvider.GetSettings().Settings, cancellationToken);
 
     /// <summary>
     /// Does a full directory scan for all settings that are configured to scan at startup.
-    /// This function returns immediately
     /// </summary>
     /// <param name="settings">
     /// Settings to process. Entries are only considered if they have <see cref="FolderSettingsV1.ScanOnStart"/> set to true
+    /// and <see cref="FolderSettingsV1.Enabled"/> set to true
     /// </param>
     /// <param name="cancellationToken">Provides means to gracefully stop the conversion</param>
-    /// <returns>Already started thread of the operation</returns>
+    /// <returns>Thread of the startup scan</returns>
     public static Thread AutoScan(FolderSettingsV1[] settings, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(settings);
@@ -98,6 +106,10 @@ internal static class AutoMonitor
         return t;
     }
 
+    /// <summary>
+    /// Starts (or restarts) directory monitoring and file conversion
+    /// based on the settings from the default settings provider
+    /// </summary>
     public static void Start()
         => Start(SettingsProvider.GetSettings().Settings);
 
@@ -120,6 +132,9 @@ internal static class AutoMonitor
         }
     }
 
+    /// <summary>
+    /// Stops all monitoring
+    /// </summary>
     public static void Stop()
     {
         lock (settingsRef)

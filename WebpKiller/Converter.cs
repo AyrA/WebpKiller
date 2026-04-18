@@ -2,8 +2,15 @@
 
 namespace WebpKiller;
 
+/// <summary>
+/// Handles imagemagick interaction
+/// </summary>
 internal static class Converter
 {
+    /// <summary>
+    /// Checks if magick.exe can be found on the system
+    /// </summary>
+    /// <returns>true if found, false otherwise</returns>
     public static bool HasMagick()
     {
         var m = FileFinder.FindExact("magick.exe");
@@ -23,11 +30,29 @@ internal static class Converter
         }
     }
 
+    /// <summary>
+    /// Converts a webp to jpeg
+    /// </summary>
+    /// <param name="webp">webp file</param>
+    /// <returns>true if success, false otherwise</returns>
+    /// <remarks>
+    /// The output file name will be the same as the input, but with a jpeg extension.
+    /// On failure, the output is not deleted, and may contain corrupted or no content.
+    /// </remarks>
     public static Task<bool> Convert(string webp)
     {
         return Convert(webp, Path.ChangeExtension(webp, ".jpg"));
     }
 
+    /// <summary>
+    /// Converts a webp to jpeg
+    /// </summary>
+    /// <param name="webp">webp file</param>
+    /// <param name="jpg">Destination file</param>
+    /// <returns>true if success, false otherwise</returns>
+    /// <remarks>
+    /// On failure, the output is not deleted, and may contain corrupted or no content.
+    /// </remarks>
     public static async Task<bool> Convert(string webp, string jpg)
     {
         if (!File.Exists(webp))

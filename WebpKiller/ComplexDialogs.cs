@@ -2,8 +2,18 @@
 
 namespace WebpKiller;
 
+/// <summary>
+/// Provides templates for more complex dialogs
+/// </summary>
 internal static class ComplexDialogs
 {
+    /// <summary>
+    /// Shows dialog with a Yes/No button, and a "Show help" expander
+    /// </summary>
+    /// <param name="message">Main message</param>
+    /// <param name="title">Title</param>
+    /// <param name="help">Help text</param>
+    /// <returns>true if "Yes" was clicked, false if "No" was clicked</returns>
     public static bool ShowHelpYesNo(string message, string title, string help)
     {
         var page = new TaskDialogPage
@@ -23,6 +33,13 @@ internal static class ComplexDialogs
         return TaskDialog.ShowDialog(page) == TaskDialogButton.Yes;
     }
 
+    /// <summary>
+    /// Shows an error dialog.
+    /// Returns when the dialog is closed
+    /// </summary>
+    /// <param name="message">Main message</param>
+    /// <param name="title">Error title</param>
+    /// <param name="help">Text containing further help</param>
     public static void ShowErrorOk(string message, string title, string help)
     {
         var page = new TaskDialogPage

@@ -3,5 +3,5 @@
     <File Path=".gitignore" />
     <File Path="README.md" />
   </Folder>
-  <Project Path="WebpKiller.csproj" />
+  <Project Path="WebpKiller/WebpKiller.csproj" />
 </Solution>

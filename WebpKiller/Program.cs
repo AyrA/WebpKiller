@@ -6,6 +6,8 @@ internal class Program
 {
     private static NotifyIcon? icon = null;
     private static readonly Stopwatch cooldown = Stopwatch.StartNew();
+    private static bool showForm = false;
+    private static bool hasInit = false;
 
     public static void ReportConversionResult(string path, bool result)
     {
@@ -24,6 +26,10 @@ internal class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        if (!DuplicateCheck.Init())
+        {
+            return;
+        }
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         Application.Idle += Init;
@@ -34,7 +40,15 @@ internal class Program
 
     private static void Init(object? sender, EventArgs e)
     {
-        Application.Idle -= Init;
+        if (hasInit)
+        {
+            if (showForm)
+            {
+                ShowSettingsForm();
+            }
+            return;
+        }
+        hasInit = true;
 
         if (!Converter.HasMagick())
         {
@@ -58,15 +72,27 @@ internal class Program
         icon.DoubleClick += delegate { ShowSettingsForm(); };
         var settings = SettingsProvider.GetSettings();
         AutoMonitor.Start(settings.Settings);
-        AutoMonitor.AutoScan(settings.Settings);
+
+        //Scan for webp files at startup, with graceful cancellation on application exit
+        var cts = new CancellationTokenSource();
+        Application.ApplicationExit += delegate { cts.Cancel(); };
+        AutoMonitor.AutoScan(settings.Settings, cts.Token);
+
+        //Show settings form if no settings exist
         if (settings.Settings.Length == 0)
         {
             ShowSettingsForm();
         }
+        DuplicateCheck.PipeMessage += delegate
+        {
+            showForm = true;
+            MessageBroker.SendMainFormShowEvent();
+        };
     }
 
     private static void ShowSettingsForm()
     {
+        showForm = false;
         var frm = Application.OpenForms.OfType<FrmSettings>().FirstOrDefault() ?? new FrmSettings();
         frm.Show();
         frm.BringToFront();

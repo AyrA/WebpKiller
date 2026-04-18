@@ -16,71 +16,86 @@ internal static class AutoMonitor
         watcher.FileCreated += Watcher_FileCreated;
     }
 
-    public static void AutoScan()
-        => AutoScan(SettingsProvider.GetSettings().Settings);
+    public static Thread AutoScan(CancellationToken cancellationToken = default)
+        => AutoScan(SettingsProvider.GetSettings().Settings, cancellationToken);
 
     /// <summary>
-    /// Does a full directory scan for all settings that are configured to scan at startup
+    /// Does a full directory scan for all settings that are configured to scan at startup.
+    /// This function returns immediately
     /// </summary>
     /// <param name="settings">
     /// Settings to process. Entries are only considered if they have <see cref="FolderSettingsV1.ScanOnStart"/> set to true
     /// </param>
-    public static void AutoScan(FolderSettingsV1[] settings)
+    /// <param name="cancellationToken">Provides means to gracefully stop the conversion</param>
+    /// <returns>Already started thread of the operation</returns>
+    public static Thread AutoScan(FolderSettingsV1[] settings, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(settings);
         using var sem = new SemaphoreSlim(Math.Max(1, Environment.ProcessorCount - 1));
 
-        async Task AsyncConvert(string file, FolderSettingsV1 setting)
+        var t = new Thread(() =>
         {
-            try
+            async Task AsyncConvert(string file, FolderSettingsV1 setting)
             {
-                var result = await ConvertWithRetry.Convert(file, 10, 1000);
-                if (result && setting.DeleteWebp)
+                try
                 {
-                    try
+                    var result = await ConvertWithRetry.Convert(file, 10, 1000);
+                    if (result && setting.DeleteWebp)
                     {
-                        File.Delete(file);
+                        try
+                        {
+                            File.Delete(file);
+                        }
+                        catch
+                        {
+                            //NOOP
+                        }
                     }
-                    catch
+                }
+                catch (Exception ex)
+                {
+                    Debug.Print("AsyncConvert({0}): {1}", file, ex.Message);
+                }
+                finally
+                {
+                    sem.Release();
+                }
+            }
+
+            foreach (var setting in settings)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                if (setting.Enabled && setting.ScanOnStart)
+                {
+                    var enumOpt = new EnumerationOptions()
                     {
-                        //NOOP
+                        IgnoreInaccessible = true,
+                        RecurseSubdirectories = setting.Recursive
+                    };
+
+                    foreach (var f in Directory.EnumerateFiles(setting.Folder, "*.webp", enumOpt))
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            break;
+                        }
+                        sem.Wait();
+                        new Thread(() => _ = AsyncConvert(f, setting)).Start();
                     }
                 }
             }
-            catch (Exception ex)
+            //Take all semaphores to ensure that all conversion processes have completed
+            var proc = Math.Max(1, Environment.ProcessorCount - 1);
+            for (var i = 0; i < proc; i++)
             {
-                Debug.Print("AsyncConvert({0}): {1}", file, ex.Message);
+                sem.Wait();
             }
-            finally
-            {
-                sem.Release();
-            }
-        }
-
-        foreach (var setting in settings)
-        {
-            if (setting.ScanOnStart)
-            {
-                var enumOpt = new EnumerationOptions()
-                {
-                    IgnoreInaccessible = true,
-                    RecurseSubdirectories = setting.Recursive
-                };
-
-                foreach (var f in Directory.EnumerateFiles(setting.Folder, "*.webp", enumOpt))
-                {
-                    sem.Wait();
-                    new Thread(() => _ = AsyncConvert(f, setting)).Start();
-                }
-            }
-        }
-        //Take all semaphores to ensure that all conversion processes have completed
-        var proc = Math.Max(1, Environment.ProcessorCount - 1);
-        for (var i = 0; i < proc; i++)
-        {
-            sem.Wait();
-        }
-
+        });
+        t.Start();
+        return t;
     }
 
     public static void Start()

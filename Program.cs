@@ -1,77 +1,75 @@
 ﻿using System.Diagnostics;
+using WebpKiller;
+using WebpKiller.Settings;
 
-FileSystemWatcher[] watchers;
-bool idle = false;
-Application.Idle += Application_Idle;
-
-void Application_Idle(object? sender, EventArgs e)
+internal class Program
 {
-    if (!idle)
+    private static NotifyIcon? icon = null;
+    private static readonly Stopwatch cooldown = Stopwatch.StartNew();
+
+    public static void ReportConversionResult(string path, bool result)
     {
-        idle = true;
-        if (args.Length == 0)
+        if (icon != null && cooldown.ElapsedMilliseconds > 5000)
         {
-            MessageBox.Show("WebpKiller <dir> [dir ...]");
+            var text = string.Format(result ?
+                "Webp converted to jpg: {0}" :
+                "Failed to convert to jpg: {0}",
+                Path.GetFileName(path));
+            var image = result ? ToolTipIcon.Info : ToolTipIcon.Error;
+            icon.ShowBalloonTip(3000, "Image converted", text, image);
+            cooldown.Restart();
+        }
+    }
+
+    [STAThread]
+    private static void Main(string[] args)
+    {
+        Application.EnableVisualStyles();
+        Application.SetCompatibleTextRenderingDefault(false);
+        Application.Idle += Init;
+        Application.Run();
+        AutoMonitor.Stop();
+        icon?.Dispose();
+    }
+
+    private static void Init(object? sender, EventArgs e)
+    {
+        Application.Idle -= Init;
+
+        if (!Converter.HasMagick())
+        {
+            ComplexDialogs.ShowErrorOk("This application requires ImageMagick to function properly, which is either not installed, or not contained in your PATH environment variable. Please install imagemagick, then start this application again.", "ImageMagick not found", "ImageMagick is a free and open source image conversion and edit tool. You can download ImageMagick from <a href=\"https://imagemagick.org/download/\">their website</a>. The site tries to automatically detect the best download for you, and thus the first download link is usually the best choice.");
+            Application.Exit();
             return;
         }
-        else
+
+        ContextMenuStrip cms = new();
+        cms.Items.Add("Settings").Click += delegate { ShowSettingsForm(); };
+        cms.Items.Add(new ToolStripSeparator());
+        cms.Items.Add("Exit").Click += delegate { Application.Exit(); };
+
+        icon = new()
         {
-            watchers = [.. args.Select(m => new FileSystemWatcher()
-            {
-                Path = m,
-                Filter = "*.webp",
-                IncludeSubdirectories = true,
-                NotifyFilter = NotifyFilters.FileName
-            })];
-            foreach (var w in watchers)
-            {
-                Console.WriteLine("Setting up watcher for {0}", w.Path);
-                w.Created += FileCreated;
-                w.EnableRaisingEvents = true;
-                foreach (var f in Directory.EnumerateFiles(w.Path, "*.webp", SearchOption.AllDirectories))
-                {
-                    Convert(f, 2, 1000);
-                }
-            }
+            Icon = Resources.GetApplicationIcon(),
+            Text = "WebpKiller",
+            Visible = true,
+            ContextMenuStrip = cms
+        };
+        icon.DoubleClick += delegate { ShowSettingsForm(); };
+        var settings = SettingsProvider.GetSettings();
+        AutoMonitor.Start(settings.Settings);
+        AutoMonitor.AutoScan(settings.Settings);
+        if (settings.Settings.Length == 0)
+        {
+            ShowSettingsForm();
         }
     }
-}
 
-Application.Run();
-
-static async void Convert(string path, int attempts, int delay)
-{
-    if (!File.Exists(path))
+    private static void ShowSettingsForm()
     {
-        return;
+        var frm = Application.OpenForms.OfType<FrmSettings>().FirstOrDefault() ?? new FrmSettings();
+        frm.Show();
+        frm.BringToFront();
+        frm.Focus();
     }
-    var dest = Path.ChangeExtension(path, ".jpg");
-    var psi = new ProcessStartInfo()
-    {
-        FileName = "magick",
-        UseShellExecute = false,
-        CreateNoWindow = true
-    };
-    psi.ArgumentList.Add(path);
-    psi.ArgumentList.Add(dest);
-    using var p = Process.Start(psi);
-    await p.WaitForExitAsync();
-    if (p.ExitCode == 0 && File.Exists(dest))
-    {
-        File.Delete(path);
-    }
-    else if (attempts > 1)
-    {
-        await Task.Delay(delay);
-        Convert(path, attempts - 1, delay);
-    }
-    else
-    {
-        Console.WriteLine("Failed to convert {0}", path);
-    }
-}
-
-static void FileCreated(object sender, FileSystemEventArgs e)
-{
-    Convert(e.FullPath, 10, 1000);
 }

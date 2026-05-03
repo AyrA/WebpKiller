@@ -16,12 +16,6 @@ The exe will be in the `bin\Release` folder
 This application needs the .NET 10 **Desktop** Runtime:
 https://dotnet.microsoft.com/en-us/download/dotnet/10.0
 
-This application needs Image Magick:
-https://imagemagick.org/download/
-
-The application checks if it can find the `magick` command anywhere in the configured lookup paths of your operating system.
-If it can't, it shows an error message about it and will exit.
-
 ## Usage
 
 This utility is of the "double click and go" type.

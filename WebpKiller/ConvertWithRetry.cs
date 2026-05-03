@@ -27,11 +27,12 @@ internal static class ConvertWithRetry
         ArgumentException.ThrowIfNullOrEmpty(webpFile);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(retryCount);
         ArgumentOutOfRangeException.ThrowIfNegative(delayMilliseconds);
+
         do
         {
             try
             {
-                if (await Converter.Convert(webpFile))
+                if (await InternalConvert.Convert(webpFile))
                 {
                     return true;
                 }

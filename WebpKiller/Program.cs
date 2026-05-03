@@ -59,13 +59,6 @@ internal class Program
         }
         hasInit = true;
 
-        if (!Converter.HasMagick())
-        {
-            ComplexDialogs.ShowErrorOk("This application requires ImageMagick to function properly, which is either not installed, or not contained in your PATH environment variable. Please install imagemagick, then start this application again.", "ImageMagick not found", "ImageMagick is a free and open source image conversion and edit tool. You can download ImageMagick from <a href=\"https://imagemagick.org/download/\">their website</a>. The site tries to automatically detect the best download for you, and thus the first download link is usually the best choice.");
-            Application.Exit();
-            return;
-        }
-
         ContextMenuStrip cms = new();
         cms.Items.Add("Settings").Click += delegate { ShowSettingsForm(); };
         cms.Items.Add(new ToolStripSeparator());
@@ -80,6 +73,14 @@ internal class Program
         };
         icon.DoubleClick += delegate { ShowSettingsForm(); };
         var settings = SettingsProvider.GetSettings();
+        var results = settings.Validate();
+        if (results.Length != 0)
+        {
+            var lines = string.Join(Environment.NewLine, results.Select(m => m.ErrorMessage));
+            ComplexDialogs.ShowErrorOk(lines, "Some settings were invalid", "Invalid folders will remain configured, but will be disabled. You can delete them from the settings window");
+            settings.Fix();
+            SettingsProvider.SaveSettings(settings);
+        }
         AutoMonitor.Start(settings.Settings);
 
         //Scan for webp files at startup, with graceful cancellation on application exit

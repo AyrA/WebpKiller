@@ -123,7 +123,7 @@ internal static class AutoMonitor
         lock (settingsRef)
         {
             Stop();
-            foreach (var setting in settings)
+            foreach (var setting in settings.Where(m => m.Enabled))
             {
                 var id = watcher.MonitorPath(setting.Folder, setting.Recursive);
                 settingsRef[id] = setting;

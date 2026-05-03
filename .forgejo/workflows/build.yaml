@@ -1,0 +1,17 @@
+on: [push]
+jobs:
+  Build:
+    runs-on: dotnet
+    steps:
+      - name: Checking out code
+        uses: actions/checkout@v4
+      - name: Publishing application
+        run: dotnet publish WebpKiller -o publish
+      - name: Uploading artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Automated build.zip
+          path: publish/**
+          retention-days: 30
+          compression-level: 9
+          archive: true

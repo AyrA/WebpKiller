@@ -59,16 +59,21 @@ public partial class FrmSettings : Form
         {
             return;
         }
-        var current = CurrentFolder;
-        current.Settings = current.Settings with
+        var settings = new FolderSettingsV1(
+            CurrentFolder.Settings.Folder, CbEnabled.Checked,
+            CbRecursive.Checked, CbScanOnStartup.Checked,
+            CbDeleteWebp.Checked, CbShowConversionMsg.Checked);
+        if (settings.Enabled)
         {
-            DeleteWebp = CbDeleteWebp.Checked,
-            Enabled = CbEnabled.Checked,
-            Recursive = CbRecursive.Checked,
-            ScanOnStart = CbScanOnStartup.Checked,
-            ShowConversionMsg = CbShowConversionMsg.Checked
-        };
-        CurrentFolder = current;
+            var err = settings.Validate(new(settings)).ToArray();
+            if (err.Length > 0)
+            {
+                var lines = string.Join(Environment.NewLine, err.Select(m => m.ErrorMessage));
+                ComplexDialogs.ShowErrorOk(lines, "Invalid folder", "To resolve this error, either create the folder, delete the setting, or disable it");
+                return;
+            }
+        }
+        CurrentFolder = new(settings);
     }
 
     private void BtnCancel_Click(object sender, EventArgs e)

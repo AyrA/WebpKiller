@@ -6,7 +6,7 @@ jobs:
       - name: Checking out code
         uses: actions/checkout@v4
       - name: Publishing application
-        run: dotnet publish WebpKiller -o publish
+        run: dotnet publish ${{ vars.PROJECT_NAME }} -o publish
       - name: Uploading artifact
         uses: actions/upload-artifact@v3
         with:
